@@ -14,14 +14,12 @@ public class PlayerController : MonoBehaviour
     private bool jumpRequest;
 
     private Rigidbody rb;
-    private CapsuleCollider capsule;
     private Transform playerCamera;
     private float rotationX = 0f;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        capsule = GetComponent<CapsuleCollider>();
         playerCamera = Camera.main.transform;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
