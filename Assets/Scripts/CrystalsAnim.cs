@@ -1,0 +1,41 @@
+using UnityEngine;
+
+public class CrystalsAnim : MonoBehaviour
+{
+    private Vector3 startPos;
+    private float timer;
+    private float currentSpeed;
+    private float amplitude = 0.2f;
+
+    //public ParticleSystem particlePrefab;
+
+    void Start()
+    {
+        startPos = transform.position;
+        SetNewSpeed();
+
+        //if (particlePrefab != null)
+        //{
+        //    ParticleSystem particles = Instantiate(particlePrefab, transform);
+        //    particles.transform.localPosition = Vector3.zero;
+        //}
+    }
+
+    void Update()
+    {
+        timer += Time.deltaTime * currentSpeed;
+        float offsetY = Mathf.Sin(timer) * amplitude;
+        transform.position = startPos + Vector3.up * offsetY;
+
+        if (timer >= 2 * Mathf.PI)
+        {
+            timer = 0f;
+            SetNewSpeed();
+        }
+    }
+
+    void SetNewSpeed()
+    {
+        currentSpeed = Random.Range(0.5f, 1.5f);
+    }
+}

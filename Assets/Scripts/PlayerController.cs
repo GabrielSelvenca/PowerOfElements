@@ -1,75 +1,80 @@
-using System;
-using System.Text.RegularExpressions;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 7f;
+    private CharacterController controller;
+    private Transform myCamera;
+
+    public float speed = 5f;
     public float sensitivity = 2f;
 
-    public float jumpForce = 6f;
+    public float jumpForce = 5f;
+    public float gravity = -9.81f;
+    public float groundCheckDistance = 0.4f;
 
-    public LayerMask groundLayer;
-    private bool isGroundedFlag = false;
-    private bool jumpRequest;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private LayerMask groundMask;
 
-    private Rigidbody rb;
-    private Transform playerCamera;
+    private float yVelocity;
     private float rotationX = 0f;
+    private Vector3 moveDirection;
+    private bool isGrounded;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        playerCamera = Camera.main.transform;
+        controller = GetComponent<CharacterController>();
+        myCamera = Camera.main.transform;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    private void Update()
+    void Update()
     {
         float mouseX = Input.GetAxis("Mouse X") * sensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * sensitivity;
 
         rotationX -= mouseY;
         rotationX = Mathf.Clamp(rotationX, -90f, 90f);
-        playerCamera.localRotation = Quaternion.Euler(rotationX, 0f, 0f);
-
+        myCamera.localRotation = Quaternion.Euler(rotationX, 0f, 0f);
         transform.Rotate(Vector3.up * mouseX);
 
-        if (Input.GetKeyDown(KeyCode.Space) && isGroundedFlag)
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+
+        Vector3 forward = transform.forward;
+        Vector3 right = transform.right;
+        Vector3 inputDir = (right * horizontal + forward * vertical).normalized;
+
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
+
+        if (isGrounded)
         {
-            jumpRequest = true;
+            if (inputDir.magnitude > 0.1f)
+                moveDirection = inputDir;
+            else
+                moveDirection = Vector3.zero;
+
+            if (yVelocity < 0)
+                yVelocity = -2f;
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                yVelocity = Mathf.Sqrt(jumpForce * -2f * gravity);
+                if (moveDirection == Vector3.zero)
+                    moveDirection = Vector3.zero;
+            }
         }
-    }
-
-    private void FixedUpdate()
-    {
-        float moveX = Input.GetAxis("Horizontal");
-        float moveZ = Input.GetAxis("Vertical");
-
-        if (jumpRequest)
+        else
         {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            jumpRequest = false;
+            if (inputDir.magnitude > 0.1f)
+                moveDirection = inputDir;
         }
 
-        Vector3 movement = transform.right * moveX + transform.forward * moveZ;
-        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
-    }
+        yVelocity += gravity * Time.deltaTime;
 
-    private void OnCollisionStay(Collision collision)
-    {
-        if ((groundLayer.value & (1 << collision.gameObject.layer)) > 0)
-        {
-            isGroundedFlag = true;
-        }
-    }
-
-    private void OnCollisionExit(Collision collision)
-    {
-        if ((groundLayer.value & (1 << collision.gameObject.layer)) > 0)
-        {
-            isGroundedFlag = false;
-        }
+        Vector3 moveXZ = moveDirection * speed;
+        Vector3 finalMove = new Vector3(moveXZ.x, yVelocity, moveXZ.z);
+        controller.Move(finalMove * Time.deltaTime);
     }
 }
