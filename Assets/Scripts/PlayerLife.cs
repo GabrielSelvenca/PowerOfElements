@@ -1,14 +1,16 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PlayerLife : MonoBehaviour
 {
-    // Variaveis
+    // Váriaveis
 
     float maxLife = 100f;
     float currentLife;
+    public bool isInvincible = false;
 
     // Publicos
 
@@ -28,13 +30,18 @@ public class PlayerLife : MonoBehaviour
     {
         currentLife = maxLife;
         originalColor = lifeText.color;
-        AtualizarUI();
+        UpdateUI();
     }
 
     private void Update()
     {
         if (slider.value != targetFill)
             slider.value = Mathf.Lerp(slider.value, targetFill, Time.deltaTime * barSpeed);
+        
+        if (currentLife <= 0)
+        {
+            SceneManager.LoadScene("DeathScene");
+        }
     }
 
     public void TakeDamage(float damage)
@@ -49,7 +56,7 @@ public class PlayerLife : MonoBehaviour
         flashRoutine = StartCoroutine(FlashText());
 
         if (oldLife != currentLife)
-            AtualizarUI();
+            UpdateUI();
     }
 
     public void Heal(float amount)
@@ -61,10 +68,33 @@ public class PlayerLife : MonoBehaviour
         currentLife = Mathf.Clamp(currentLife + amount, 0, maxLife);
 
         if (oldLife != currentLife)
-            AtualizarUI();
+            UpdateUI();
     }
 
-    void AtualizarUI()
+    public void ActivateInvincibility(float durantion)
+    {
+        if (!isInvincible)
+            StartCoroutine(InvincibilityRoutine(durantion));
+    }
+
+    public void HealFull()
+    {
+        currentLife = maxLife;
+        UpdateUI();
+    }
+
+    IEnumerator InvincibilityRoutine(float duration)
+    {
+        isInvincible = true;
+        lifeText.color = Color.yellow;
+
+        yield return new WaitForSeconds(duration);
+
+        isInvincible = false;
+        lifeText.color = originalColor;
+    }
+
+    void UpdateUI()
     {
         targetFill = currentLife / maxLife;
         lifeText.text = Mathf.RoundToInt(targetFill * 100) + "%";

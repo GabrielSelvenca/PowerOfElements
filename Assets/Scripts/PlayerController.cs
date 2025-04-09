@@ -1,9 +1,10 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
-    private CharacterController controller;
-    private Transform myCamera;
+    // Publicos & Váriaveis
 
     public float speed = 5f;
     public float sensitivity = 2f;
@@ -12,9 +13,27 @@ public class PlayerController : MonoBehaviour
     public float gravity = -9.81f;
     public float groundCheckDistance = 0.4f;
 
+    public GameObject SpeedEffect;
+    public GameObject JumpEffect;
+    public GameObject HealthEffect;
+
+    // Privados & Váriaveis
+
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundMask;
 
+    private int SpeedLayer = 9;
+    private int HealthLayer = 10;
+    private int JumpLayer = 11;
+
+    private float originalSpeed;
+    private float originalJumpForce;
+
+    private Coroutine speedRoutine;
+    private Coroutine jumpRoutine;
+
+    private CharacterController controller;
+    private Transform myCamera;
     private float yVelocity;
     private float rotationX = 0f;
     private Vector3 moveDirection;
@@ -23,14 +42,23 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        CrystalsTimerController timer = GetComponent<CrystalsTimerController>();
         myCamera = Camera.main.transform;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        originalSpeed = speed;
+        originalJumpForce = jumpForce;
     }
 
     void Update()
     {
+        if (transform.position.y <= -5)
+        {
+            SceneManager.LoadScene("DeathScene");
+        }
+
         float mouseX = Input.GetAxis("Mouse X") * sensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * sensitivity;
 
@@ -76,5 +104,82 @@ public class PlayerController : MonoBehaviour
         Vector3 moveXZ = moveDirection * speed;
         Vector3 finalMove = new Vector3(moveXZ.x, yVelocity, moveXZ.z);
         controller.Move(finalMove * Time.deltaTime);
+    }
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        int layerObj = hit.gameObject.layer;
+
+        switch (layerObj)
+        {
+            case int l when l == SpeedLayer:
+                SpeedUpgrade();
+                Destroy(hit.gameObject);
+                break;
+
+            case int l when l == HealthLayer:
+                InvencibleUpgrade();
+                Destroy(hit.gameObject);
+                break;
+
+            case int l when l == JumpLayer:
+                JumpUpgrade();
+                Destroy(hit.gameObject);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private void SpeedUpgrade()
+    {
+        if (SpeedEffect != null)
+            Instantiate(SpeedEffect, transform.position, Quaternion.identity);
+
+        if (speedRoutine != null) StopCoroutine(speedRoutine);
+        speedRoutine = StartCoroutine(SpeedUpgradeRoutine(30, originalSpeed * 2));
+    }
+
+    private void JumpUpgrade()
+    {
+        if (JumpEffect != null)
+            Instantiate(JumpEffect, transform.position, Quaternion.identity);
+
+        if (jumpRoutine != null) StopCoroutine(jumpRoutine);
+        jumpRoutine = StartCoroutine(JumpUpgradeRoutine(30, originalJumpForce + 5f));
+    }
+
+    IEnumerator SpeedUpgradeRoutine(float duration, float speedUpgrade)
+    {
+        speed = speedUpgrade;
+        CrystalsTimerController timer = GetComponent<CrystalsTimerController>();
+        timer.SpeedTimer(duration);
+        yield return new WaitForSeconds(duration);
+        speed = originalSpeed;
+    }
+
+    IEnumerator JumpUpgradeRoutine(float duration, float jumpUpgrade)
+    {
+        jumpForce = jumpUpgrade;
+        CrystalsTimerController timer = GetComponent<CrystalsTimerController>();
+        timer.JumpTimer(duration);
+        yield return new WaitForSeconds(duration);
+        jumpForce = originalJumpForce;
+    }
+
+    private void InvencibleUpgrade()
+    {
+        if (HealthEffect != null)
+            Instantiate(HealthEffect, transform.position, Quaternion.identity);
+
+        PlayerLife life = GetComponent<PlayerLife>();
+        CrystalsTimerController timer = GetComponent<CrystalsTimerController>();
+        timer.HealthTimer(15f);
+        if (life != null)
+        {
+            life.HealFull();
+            life.ActivateInvincibility(15f);
+        }
     }
 }

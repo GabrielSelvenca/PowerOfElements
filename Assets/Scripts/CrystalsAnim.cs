@@ -7,18 +7,10 @@ public class CrystalsAnim : MonoBehaviour
     private float currentSpeed;
     private float amplitude = 0.2f;
 
-    //public ParticleSystem particlePrefab;
-
     void Start()
     {
         startPos = transform.position;
         SetNewSpeed();
-
-        //if (particlePrefab != null)
-        //{
-        //    ParticleSystem particles = Instantiate(particlePrefab, transform);
-        //    particles.transform.localPosition = Vector3.zero;
-        //}
     }
 
     void Update()
@@ -36,6 +28,6 @@ public class CrystalsAnim : MonoBehaviour
 
     void SetNewSpeed()
     {
-        currentSpeed = Random.Range(0.5f, 1.5f);
+        currentSpeed = Random.Range(1.5f, 2f);
     }
 }
