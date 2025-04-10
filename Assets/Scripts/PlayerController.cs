@@ -1,11 +1,13 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.ProBuilder.Shapes;
 using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
     // Publicos & Váriaveis
-
+    [Header("PlayerConfigs")]
     public float speed = 5f;
     public float sensitivity = 2f;
 
@@ -13,12 +15,19 @@ public class PlayerController : MonoBehaviour
     public float gravity = -9.81f;
     public float groundCheckDistance = 0.4f;
 
+    [Header("Effects")]
     public GameObject SpeedEffect;
     public GameObject JumpEffect;
     public GameObject HealthEffect;
 
+
+    [Header("Audios")]
+    public AudioClip explosionCrystalAudio;
+
     // Privados & Váriaveis
 
+
+    [Header("GroundConfig")]
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundMask;
 
@@ -113,18 +122,15 @@ public class PlayerController : MonoBehaviour
         switch (layerObj)
         {
             case int l when l == SpeedLayer:
-                SpeedUpgrade();
-                Destroy(hit.gameObject);
+                SpeedUpgrade(hit.gameObject);
                 break;
 
             case int l when l == HealthLayer:
-                InvencibleUpgrade();
-                Destroy(hit.gameObject);
+                InvencibleUpgrade(hit.gameObject);
                 break;
 
             case int l when l == JumpLayer:
-                JumpUpgrade();
-                Destroy(hit.gameObject);
+                JumpUpgrade(hit.gameObject);
                 break;
 
             default:
@@ -132,22 +138,49 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void SpeedUpgrade()
+    private void SpeedUpgrade(GameObject crystal)
     {
         if (SpeedEffect != null)
-            Instantiate(SpeedEffect, transform.position, Quaternion.identity);
+            Instantiate(SpeedEffect, crystal.transform.position, Quaternion.identity);
+
+        if (explosionCrystalAudio != null)
+            AudioSource.PlayClipAtPoint(explosionCrystalAudio, crystal.transform.parent.position, 1f);
 
         if (speedRoutine != null) StopCoroutine(speedRoutine);
         speedRoutine = StartCoroutine(SpeedUpgradeRoutine(30, originalSpeed * 2));
+        StartCoroutine(RespawnCrystal(crystal, 30f));
     }
 
-    private void JumpUpgrade()
+    private void JumpUpgrade(GameObject crystal)
     {
         if (JumpEffect != null)
-            Instantiate(JumpEffect, transform.position, Quaternion.identity);
+            Instantiate(JumpEffect, crystal.transform.position, Quaternion.identity);
+
+        if (explosionCrystalAudio != null)
+            AudioSource.PlayClipAtPoint(explosionCrystalAudio, crystal.transform.parent.position, 1f);
 
         if (jumpRoutine != null) StopCoroutine(jumpRoutine);
         jumpRoutine = StartCoroutine(JumpUpgradeRoutine(30, originalJumpForce + 5f));
+        StartCoroutine(RespawnCrystal(crystal, 30f));
+    }
+
+    private void InvencibleUpgrade(GameObject crystal)
+    {
+        if (HealthEffect != null)
+            Instantiate(HealthEffect, crystal.transform.position, Quaternion.identity);
+
+        if (explosionCrystalAudio != null)
+            AudioSource.PlayClipAtPoint(explosionCrystalAudio, crystal.transform.parent.position, 1f);
+
+        PlayerLife life = GetComponent<PlayerLife>();
+        CrystalsTimerController timer = GetComponent<CrystalsTimerController>();
+        timer.HealthTimer(15f);
+        if (life != null)
+        {
+            life.HealFull();
+            life.ActivateInvincibility(15f);
+        }
+        StartCoroutine(RespawnCrystal(crystal, 30f));
     }
 
     IEnumerator SpeedUpgradeRoutine(float duration, float speedUpgrade)
@@ -168,18 +201,12 @@ public class PlayerController : MonoBehaviour
         jumpForce = originalJumpForce;
     }
 
-    private void InvencibleUpgrade()
+    IEnumerator RespawnCrystal(GameObject crystal, float time)
     {
-        if (HealthEffect != null)
-            Instantiate(HealthEffect, transform.position, Quaternion.identity);
+        crystal.transform.parent.gameObject.SetActive(false);
 
-        PlayerLife life = GetComponent<PlayerLife>();
-        CrystalsTimerController timer = GetComponent<CrystalsTimerController>();
-        timer.HealthTimer(15f);
-        if (life != null)
-        {
-            life.HealFull();
-            life.ActivateInvincibility(15f);
-        }
+        yield return new WaitForSeconds(time);
+
+        crystal.transform.parent.gameObject.SetActive(true);
     }
 }

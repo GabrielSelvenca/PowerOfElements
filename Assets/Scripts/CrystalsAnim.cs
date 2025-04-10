@@ -18,6 +18,7 @@ public class CrystalsAnim : MonoBehaviour
         timer += Time.deltaTime * currentSpeed;
         float offsetY = Mathf.Sin(timer) * amplitude;
         transform.position = startPos + Vector3.up * offsetY;
+        transform.rotation = Quaternion.Euler(0f, timer * 90f, 0f);
 
         if (timer >= 2 * Mathf.PI)
         {

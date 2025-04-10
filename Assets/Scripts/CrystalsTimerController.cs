@@ -46,7 +46,7 @@ public class CrystalsTimerController : MonoBehaviour
             int minutos = totalSeconds / 60;
             int seconds = totalSeconds % 60;
             
-            if (minutos <= 0 || seconds <= 10)
+            if (minutos <= 0 && seconds <= 10)
             {
                 text.color = Color.red;
             } else if (minutos <= 1)
@@ -64,5 +64,6 @@ public class CrystalsTimerController : MonoBehaviour
         }
 
         text.text = "00:00";
+        text.color = Color.white;
     }
 }
