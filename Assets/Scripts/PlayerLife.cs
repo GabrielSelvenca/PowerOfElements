@@ -29,16 +29,21 @@ public class PlayerLife : MonoBehaviour
     private void Start()
     {
         currentLife = maxLife;
+
+        slider.maxValue = Mathf.RoundToInt(maxLife);
+        slider.value = slider.maxValue;
+
         originalColor = lifeText.color;
+
         UpdateUI();
     }
 
     private void Update()
     {
         if (slider.value != targetFill)
-            slider.value = Mathf.Lerp(slider.value, targetFill, Time.deltaTime * barSpeed);
-        
-        if (currentLife <= 0)
+            slider.value = Mathf.Lerp(slider.value, currentLife, Time.deltaTime * barSpeed);
+
+        if (Mathf.RoundToInt(currentLife) <= 0)
         {
             SceneManager.LoadScene("DeathScene");
         }
@@ -46,7 +51,7 @@ public class PlayerLife : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        if (damage <= 0) return;
+        if (damage <= 0 && isInvincible) return;
 
         float oldLife = currentLife;
 
@@ -57,6 +62,8 @@ public class PlayerLife : MonoBehaviour
 
         if (oldLife != currentLife)
             UpdateUI();
+
+        Debug.Log($"Dano recebido: {damage}\nVida Atual: {oldLife}\nVida pós: {currentLife}");
     }
 
     public void Heal(float amount)
@@ -96,8 +103,8 @@ public class PlayerLife : MonoBehaviour
 
     void UpdateUI()
     {
-        targetFill = currentLife / maxLife;
-        lifeText.text = Mathf.RoundToInt(targetFill * 100) + "%";
+        targetFill = currentLife;
+        lifeText.text = Mathf.RoundToInt(currentLife) + "%";
     }
 
     IEnumerator FlashText()

@@ -18,10 +18,10 @@ TagManager:
   - HealthCrystal
   - JumpCrystal
   - 
-  - 
-  - 
-  - 
-  - 
+  - WaterElement
+  - FireElement
+  - RockElement
+  - AirElement
   - 
   - 
   - 

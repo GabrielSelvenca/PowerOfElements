@@ -150,7 +150,7 @@ public class PlayerController : MonoBehaviour
         speedRoutine = StartCoroutine(SpeedUpgradeRoutine(30, originalSpeed * 2));
         StartCoroutine(RespawnCrystal(crystal, 30f));
     }
-
+    
     private void JumpUpgrade(GameObject crystal)
     {
         if (JumpEffect != null)
