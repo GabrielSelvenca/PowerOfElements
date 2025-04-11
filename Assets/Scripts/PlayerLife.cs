@@ -51,7 +51,7 @@ public class PlayerLife : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        if (damage <= 0 && isInvincible) return;
+        if (damage <= 0 || isInvincible) return;
 
         float oldLife = currentLife;
 
