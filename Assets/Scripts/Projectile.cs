@@ -3,9 +3,16 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.VFX;
 
+public enum ProjectileOwner
+{
+    Player,
+    Enemy
+}
+
 public class Projectile : MonoBehaviour
 {
     public float lifetime = 5f;
+    public ProjectileOwner owner;
 
     private bool canHitPlayer = true;
     private bool canHitenemy = true;
@@ -17,8 +24,7 @@ public class Projectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-
-        if (other.CompareTag("Enemy") && canHitenemy)
+        if (owner == ProjectileOwner.Player && other.CompareTag("Enemy") && canHitenemy)
         {
             canHitenemy = false;
             EnemyHealth enemy = other.GetComponent<EnemyHealth>();
@@ -30,7 +36,7 @@ public class Projectile : MonoBehaviour
             }
             canHitenemy = true;
         }
-        else if (other.CompareTag("Player") && canHitPlayer)
+        else if (owner == ProjectileOwner.Enemy && other.CompareTag("Player") && canHitPlayer)
         {
             canHitPlayer = false;
             PlayerLife player = other.GetComponent<PlayerLife>();
@@ -43,17 +49,17 @@ public class Projectile : MonoBehaviour
             canHitPlayer = true;
         }
         Destroy(gameObject);
-    } 
+    }
 
     private IEnumerator ResetHitEnemyFlag()
     {
         yield return new WaitForSeconds(1f);
-        canHitenemy = false;
+        canHitenemy = true;
     }
 
     private IEnumerator ResetHitPlayerFlag()
     {
         yield return new WaitForSeconds(2f);
-        canHitPlayer = false;
+        canHitPlayer = true;
     }
 }

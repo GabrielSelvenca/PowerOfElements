@@ -45,7 +45,6 @@ public class Elements : MonoBehaviour
     private void OnTriggerEnter(Collider hit)
     {
         GameObject obj = hit.gameObject;
-        Debug.Log("Entrou em trigger com: " + obj.name);
         int layer = hit.gameObject.layer;
 
         if (!layerToElement.TryGetValue(layer, out ElementData element)) return;
@@ -98,16 +97,45 @@ public class Elements : MonoBehaviour
 
                 if (elementColliderCounts[element.type] <= 0)
                 {
-                    activeElements.Remove(element.type);
                     elementColliderCounts[element.type] = 0;
 
-                    if (damageCoroutines.TryGetValue(element.type, out Coroutine co) && co != null)
+                    if (element.damagePersistAfterExit)
                     {
-                        StopCoroutine(co);
-                        damageCoroutines[element.type] = null;
+                        StartCoroutine(ApplyPersistentDamage(element));
+                    }
+                    else
+                    {
+                        activeElements.Remove(element.type);
+
+                        if (damageCoroutines.TryGetValue(element.type, out Coroutine co) && co != null)
+                        {
+                            StopCoroutine(co);
+                            damageCoroutines[element.type] = null;
+                        }
                     }
                 }
             }
+        }
+    }
+
+    private IEnumerator ApplyPersistentDamage(ElementData element)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < element.persistTime)
+        {
+            yield return new WaitForSeconds(element.persistDelay);
+
+            life.TakeDamage(element.persistDamage);
+            elapsed += element.persistDelay;
+        }
+
+        activeElements.Remove(element.type);
+
+        if (damageCoroutines.TryGetValue(element.type, out Coroutine co) && co != null)
+        {
+            StopCoroutine(co);
+            damageCoroutines[element.type] = null;
         }
     }
 

@@ -7,19 +7,13 @@ public class EnemyShooter : MonoBehaviour
     public GameObject projectilePrefab;
     public Transform firePoint;
     public float projectileSpeed = 20f;
-    public int maxHealth = 60;
 
     private Transform player;
     private float fireCooldown;
-    private int currentHealth;
-    private EnemyHealthBar healthBar;
 
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-        currentHealth = maxHealth;
-        healthBar = GetComponentInChildren<EnemyHealthBar>();
-        healthBar.SetMaxHealth(maxHealth);
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
     }
 
     void Update()
@@ -29,7 +23,14 @@ public class EnemyShooter : MonoBehaviour
         float distance = Vector3.Distance(transform.position, player.position);
         if (distance <= attackRange)
         {
-            transform.LookAt(new Vector3(player.position.x, transform.position.y, player.position.z));
+            Vector3 directionToPlayer = player.position - transform.position;
+            directionToPlayer.y = 0f;
+
+            if (directionToPlayer != Vector3.zero)
+            {
+                Quaternion lookRotation = Quaternion.LookRotation(-directionToPlayer);
+                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f);
+            }
 
             if (fireCooldown <= 0f)
             {
@@ -43,17 +44,26 @@ public class EnemyShooter : MonoBehaviour
 
     void Shoot()
     {
-        if (projectilePrefab == null) return;
+        if (projectilePrefab == null || firePoint == null) return;
+
+        Vector3 direction = (player.position - firePoint.position).normalized;
 
         GameObject projectile = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
+
+        projectile.transform.rotation = Quaternion.LookRotation(direction) * Quaternion.Euler(0, -90, 0);
 
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            Vector3 direction = (player.position - firePoint.position).normalized;
             rb.linearVelocity = direction * projectileSpeed;
         }
 
-        Destroy(projectile, 5f);
+        Projectile projectileScript = projectile.GetComponent<Projectile>();
+        if (projectileScript != null)
+        {
+            projectileScript.owner = ProjectileOwner.Enemy;
+        }
+
+        Physics.IgnoreCollision(projectile.GetComponent<Collider>(), GetComponent<Collider>());
     }
 }
