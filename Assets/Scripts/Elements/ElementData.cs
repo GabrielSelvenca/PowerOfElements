@@ -18,4 +18,10 @@ public class ElementData
     public float delay;
     public float speedModifier = 1f;
     public float force = 0f;
+
+    public bool damagePersistAfterExit;
+
+    public float persistDelay;
+    public float persistDamage;
+    public float persistTime;
 }

@@ -9,11 +9,12 @@ public class PlayerLife : MonoBehaviour
     // Váriaveis
 
     float maxLife = 100f;
-    float currentLife;
+    
     public bool isInvincible = false;
 
     // Publicos
 
+    public float currentLife;
     public Slider slider;
     public TextMeshProUGUI lifeText;
 

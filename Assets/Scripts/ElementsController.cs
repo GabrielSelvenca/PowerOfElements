@@ -24,7 +24,14 @@ public class Elements : MonoBehaviour
         playerController = GetComponent<PlayerController>();
         life = GetComponent<PlayerLife>();
 
-        originalSpeed = playerController.speed;
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+
+        if (player != null)
+        {
+            playerController = player.GetComponent<PlayerController>();
+            life = player.GetComponent<PlayerLife>();
+            originalSpeed = playerController != null ? playerController.speed : 0f;
+        }
 
         layerToElement = new Dictionary<int, ElementData>();
         foreach(var element in elements)
@@ -38,6 +45,7 @@ public class Elements : MonoBehaviour
     private void OnTriggerEnter(Collider hit)
     {
         GameObject obj = hit.gameObject;
+        Debug.Log("Entrou em trigger com: " + obj.name);
         int layer = hit.gameObject.layer;
 
         if (!layerToElement.TryGetValue(layer, out ElementData element)) return;
@@ -51,12 +59,12 @@ public class Elements : MonoBehaviour
         {
             activeElements.Add(element.type);
 
-            if (element.initialDamage > 0)
+            if (life != null && element.initialDamage > 0)
             {
                 life.TakeDamage(element.initialDamage);
             }
 
-            if (element.continuousDamage > 0)
+            if (life != null && element.continuousDamage > 0)
             {
                 Coroutine co = StartCoroutine(ApplyDamageContinous(element));
                 damageCoroutines[element.type] = co;
@@ -115,7 +123,8 @@ public class Elements : MonoBehaviour
     private IEnumerator ApplySpeedEffect(ElementData element)
     {
         float modifiedSpeed = originalSpeed * element.speedModifier;
-        playerController.speed = modifiedSpeed;
+        if(playerController != null)
+            playerController.speed = modifiedSpeed;
 
         while (activeElements.Contains(element.type))
         {
